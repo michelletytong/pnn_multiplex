@@ -198,8 +198,6 @@ conda activate pnn-seg
 make nuclei
 ```
 
-Roughly a minute per image with a GPU, ~45 minutes on CPU.
-
 ### Step 3 — check the nuclei ← **a window opens**
 
 ```bash

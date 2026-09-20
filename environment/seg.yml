@@ -18,8 +18,7 @@
 # shim that also handles v3, so cellpose>=3 works, but 4.0.9 is what is tested.
 #
 # torch arrives as a cellpose dependency and picks its own accelerator: CUDA where
-# present, MPS on Apple Silicon, else CPU. CPU works, roughly 20x slower
-# (~45 min/image instead of ~1 min).
+# present, MPS on Apple Silicon, else CPU. CPU works, just considerably slower.
 name: pnn-seg
 channels: [conda-forge]
 dependencies:

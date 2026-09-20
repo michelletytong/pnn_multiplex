@@ -36,7 +36,7 @@ def _model():
     ver = str(getattr(cellpose, "version", "?"))
 
     gpu = GPU
-    if gpu is None:     # CPU is ~20x slower here, so take an accelerator if there is one
+    if gpu is None:     # CPU is much slower here, so take an accelerator if there is one
         try:
             import torch
             gpu = bool(torch.cuda.is_available()
