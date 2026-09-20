@@ -1,0 +1,33 @@
+# Environment: pnn-seg
+#   Cellpose segmentation only: s02 (DAPI -> nuclei) and
+#   s04 --detector cellpose (DARPP32 objects).
+#
+#   conda env create -f environment/seg.yml
+#   conda activate pnn-seg
+#
+# EVERYTHING EXCEPT PYTHON COMES FROM PIP, ON PURPOSE.
+# Letting conda-forge supply numpy/scipy here puts a second OpenMP runtime
+# (lib/libomp.dylib) alongside the one inside torch's wheel, and cellpose then dies
+# on import with "OMP: Error #15 ... multiple copies of the OpenMP runtime".
+# Keeping the whole stack on pip means one libomp and no conflict. Tested: building
+# this file with conda-forge numpy/scipy reproduces the crash every time.
+#
+# cellpose is pinned to a v4 release because v4 changed the API the pipeline calls:
+# models.Cellpose became models.CellposeModel, model_type='nuclei' was dropped for
+# the single 'cpsam' model, and eval() returns 3 values rather than 4. s02 carries a
+# shim that also handles v3, so cellpose>=3 works, but 4.0.9 is what is tested.
+#
+# torch arrives as a cellpose dependency and picks its own accelerator: CUDA where
+# present, MPS on Apple Silicon, else CPU. CPU works, roughly 20x slower
+# (~45 min/image instead of ~1 min).
+name: pnn-seg
+channels: [conda-forge]
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      - cellpose==4.0.9
+      - pyyaml>=6.0
+      - tifffile>=2023.1
+      - pandas>=2.0
+      - scipy>=1.10

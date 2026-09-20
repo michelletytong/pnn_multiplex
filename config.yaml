@@ -1,0 +1,122 @@
+# pnn_multiplex configuration
+# Per-cell multi-marker quantification of multiplexed images, anchored on DAPI nuclei.
+# One TIFF per channel; everything downstream reads channel ROLES from here.
+
+pixel_size_um: 0.624         # measured from the TIFF XResolution tag (1.6028 px/µm)
+
+paths:
+  # Where you cloned github.com/ciampluca/counting_perineuronal_nets.
+  # Default assumes it sits next to this project; change if it is elsewhere.
+  # Only needed for the PNN detector (s04 --detector lupori).
+  cpn_repo:   ../counting_perineuronal_nets
+  # Unzipped weights from that repo's releases. See environment/cpn.md.
+  pnn_model:  model_zoo/pnn_v2_fasterrcnn_640
+  data:       data                                               # one TIFF per channel
+  rois:       rois                                               # ROI polygons per image (GeoJSON)
+  results:    results
+  manifest:   samples.csv    # per-ANIMAL metadata (condition, sex, ...) -- see samples.example.csv
+
+# --- input layout -----------------------------------------------------------
+# One TIFF per channel, named  MouseID_BrainRegion_Slice#_Channel#.tif
+#   M1_NAc_1_1.tif  M1_NAc_1_2.tif  M1_NAc_1_3.tif  M1_NAc_1_4.tif
+# The files sharing MouseID_BrainRegion_Slice# are ONE image. A marker with no
+# file is simply absent for that image (e.g. HPC images have no DARPP32 channel).
+# MouseID may contain underscores; Slice#/Channel# must be numeric.
+filename_pattern: '^(?P<animal>.+)_(?P<region>[^_]+)_(?P<slice>\d+)_(?P<channel>\d+)$'
+
+# --- channel number -> marker role (global; the same for every image) --------
+# CONFIRM against one image (python src/io_utils.py data/<file>.tif).
+channels:
+  1: DAPI
+  2: WFA
+  3: DARPP32
+  4: ERa
+
+# --- how each marker is scored per DAPI nucleus (compartment-aware) ---
+# --- markers: how each one is DETECTED, and where its intensity is measured ---
+# DAPI is the ANCHOR and is not listed: s02 segments it, s03 curates it, and the
+# resulting nuclei define the cell set that everything else is matched to.
+#
+#   detect   how objects are found in s04
+#              lupori   = the pretrained PNN FasterRCNN (WFA only)
+#              cellpose = Cellpose cpsam segmentation of that channel
+#   measure  where the per-cell intensity is sampled. May be a LIST, in which case
+#            the marker gets one column per compartment, suffixed:
+#              nucleus   = inside the nucleus mask       -> fluoMean_<m>_nucleus
+#              soma_ring = peri-nuclear ring, background -> fluoMean_<m>_soma_ring
+#            A single compartment gets the bare name, fluoMean_<m>.
+#   call_as  name of the 0/1 column, if it should differ from the marker
+#              (a WFA detection is a perineuronal net, so it reads pos_PNN)
+# `detect` is OPTIONAL. A marker without one is MEASURED ONLY: it gets
+# fluoMean_<marker> for every nucleus and no pos_ column at all.
+markers:
+  WFA:     {detect: lupori,   measure: soma_ring, call_as: PNN}
+  DARPP32: {detect: cellpose, measure: soma_ring}
+  ERa:     {measure: [nucleus, soma_ring]}
+  # ERa is measured in BOTH compartments because, in this tissue, the signal does
+  # not look predominantly nuclear: pooled over the image it is only 1.14x brighter
+  # inside nuclei than outside, and the peri-nuclear ring is brighter than the
+  # nucleus in 85% of cells. Which compartment is the right one is a question about
+  # the staining, so the pipeline reports both rather than choosing.
+  #
+  # ERa is measured, not detected. Nuclear ERa label is GRADED, not
+  # present/absent — so both a cutoff and an object detection collapse a continuous
+  # quantity into one bit and discard the very signal worth testing. Reporting
+  # fluoMean_ERa per nucleus keeps it, and lets you ask later whether ERa intensity
+  # tracks MSN status (pos_DARPP32) or PNN status (pos_PNN), or rank cells and take
+  # the top end. Intensity also reflects the label's geometry better than a binary.
+
+# Every pos_ column now comes from a DETECTED OBJECT matched one-to-one to a nucleus.
+# There are no intensity cutoffs anywhere in the pipeline: fluoMean_* are reported as
+# measurements, never dichotomised. If a marker was not detected for an image, its
+# pos_ column is blank for those cells -- blank is "not assessed", never 0.
+detection:
+  match_radius_px: 25        # detection <-> nucleus, nearest-first, one-to-one
+  # UNION ANCHOR. In a single optical plane a soma can be cut so its cytoplasm shows
+  # while its nucleus sits above or below: ~16% of DARPP32 objects here have no
+  # nucleus within the match radius, and the rate differs by region (12.8% shell vs
+  # 19.2% core), so discarding them biases a shell/core density comparison by ~7%.
+  # With this on, such an object becomes a CELL in its own right, anchored by the
+  # marker rather than by DAPI, and counts in that marker's denominators.
+  # It gets NO invented nuclear data: there is no nucleus in the plane, so
+  # nucleus-compartment columns and area_px stay blank for those rows. The
+  # `anchored_by` column marks them so you can always exclude them.
+  union_anchor: true
+  cellpose_diameter_px: null # null = let Cellpose estimate per channel
+  min_object_px: 20          # drop Cellpose objects smaller than this
+
+sampling:
+  soma_ring_dilate_px: 12    # ring width for soma_ring markers, in pixels
+
+# --- manual QC of the autodetections (s04_curate_detections.py, between s03 and s05) -------
+curation:
+  # Radius of a nucleus you add by clicking. null = median radius of the nuclei
+  # already detected in that image (falls back to 8 px if there are none).
+  add_nucleus_radius_px: null
+  # Curated results are written alongside the raw detector output, never over it:
+  #   results/nuclei_curated/<key>.npy   results/pnn/pnn_curated.csv
+  # s05 prefers curated when present, so re-running s02/s03 cannot silently
+  # discard your edits.
+
+# --- manual ROI drawing (s07) -----------------------------------------------
+# The STUDY VOCABULARY: every ROI name that may be drawn, grouped by the
+# BrainRegion token in the filename. This is the single place your study's regions
+# are declared, so it doubles as a record of the design.
+#
+# s07 pre-creates the listed layers for that region. The LAYER NAME is the ROI name,
+# so you can still rename or add layers in napari -- but with strict: true a name
+# that is not in the vocabulary is refused at save, with close matches suggested.
+# That is the point: across dozens of images, 'NAc_Shell' and 'NAc_shell' would
+# otherwise become two silently separate groups.
+#
+# Regions nest freely -- draw each at its full extent and the SMALLEST polygon
+# containing a cell wins (NAc core inside NAc shell needs no hand subtraction).
+roi_drawing:
+  # Keys are matched as a case-insensitive SUBSTRING of the BrainRegion token, so
+  # 'NAc' covers filenames that say NAC1, NAc, nac_med and so on. Declare a region
+  # once; the longest matching key wins if several apply.
+  vocabulary:
+    NAc: [NAc_shell, NAc_core]
+    HPC: [CA1, CA2, CA3, DG]
+  strict: true             # refuse ROI names not listed above
+  show_cells: true         # overlay detected nuclei + PNNs while you draw

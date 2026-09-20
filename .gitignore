@@ -1,0 +1,20 @@
+# Your data and results — never committed. Each user supplies their own.
+data/*
+!data/.gitkeep
+results/*
+!results/.gitkeep
+rois/*
+!rois/.gitkeep
+model_zoo/*
+!model_zoo/.gitkeep
+
+# Your sample sheet (samples.example.csv is the template that IS committed)
+samples.csv
+
+# Editor / tooling
+.claude/
+.vscode/
+.idea/
+__pycache__/
+*.pyc
+.DS_Store

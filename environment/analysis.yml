@@ -1,0 +1,27 @@
+# Environment: pnn-analysis
+#   The default environment. Runs every stage except the two detectors:
+#   s00 check, s01 samples, s03 + s05 + s07 (the napari windows),
+#   s06 master, s08 assign.
+#
+#   conda env create -f environment/analysis.yml
+#   conda activate pnn-analysis
+#
+# napari is pinned exactly because the pipeline uses its >=0.5 API: Points layers
+# take `border_color`/`border_width`, which were called `edge_*` before 0.5.
+# napari[pyqt5] rather than napari[all]: [all] pulls a Qt backend combination that
+# did not work on macOS arm64. On Linux/Windows [all] is usually fine too, but
+# pyqt5 is what has been tested.
+name: pnn-analysis
+channels: [conda-forge]
+dependencies:
+  - python=3.11
+  - numpy>=1.24
+  - pandas>=2.0
+  - scipy>=1.10
+  - scikit-image>=0.20
+  - matplotlib>=3.6
+  - pyyaml>=6.0
+  - tifffile>=2023.1
+  - pip
+  - pip:
+      - "napari[pyqt5]==0.9.1"
