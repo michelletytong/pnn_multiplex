@@ -487,8 +487,7 @@ Also: [scikit-image](https://scikit-image.org),
 
 This pipeline was written with [Claude Code](https://claude.com/claude-code)
 (Anthropic). Scientific decisions were mine — what to measure and in which
-compartment, whether a marker deserves a yes/no call at all, how to handle somata
-whose nucleus is out of the imaging plane — and the code was written to those
+compartments, whether a marker deserves a yes/no at all or just fluorescence measurements, how to handle somata whose nucleus is out of the imaging plane, even the logic of the code itself and how the data *.csv should be organized — and the code was written to those
 decisions, then checked against real images by a human user at every step.
 
 ## Licence
