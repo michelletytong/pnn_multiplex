@@ -60,8 +60,8 @@ conda activate pnn-analysis
 That's enough to run most of the pipeline. **The two detectors need their own environments**, because their dependencies conflict with each other:
 
 ```bash
-conda env create -f environment/seg.yml     # Cellpose: nuclei and DARPP-32
-conda env create -f environment/cpn.yml     # the PNN detector
+conda env create -f environment/seg.yml     
+conda env create -f environment/cpn.yml     
 ```
 
 | you want to… | environment |
