@@ -1,0 +1,13 @@
+# pnn-seg environment — Python 3.11
+# Cellpose detection only: s02 (nuclei) and s04 --detector cellpose (DARPP-32).
+#
+# All packages are pip-only on purpose — mixing conda-forge numpy/scipy with
+# torch's bundled libomp causes "OMP: Error #15" on macOS. Keep everything on pip.
+#
+# Usage (in a Python 3.11 venv or conda env with only python + pip):
+#   pip install -r environment/requirements-seg.txt
+cellpose==4.0.9
+pyyaml>=6.0
+tifffile>=2023.1
+pandas>=2.0
+scipy>=1.10

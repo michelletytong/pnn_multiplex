@@ -44,18 +44,31 @@ pipeline logic works on your machine.
 
 ## Installing
 
-You need [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html)
-(Miniconda is fine). Then:
+### 1. Get the prerequisites
+
+You need **git** and **conda** (Miniconda is enough). If you already have both, skip ahead.
+
+**macOS / Linux**
+
+- **git** — macOS: `xcode-select --install` in Terminal. Linux: `sudo apt install git` (Debian/Ubuntu) or `sudo dnf install git` (Fedora/RHEL).
+- **conda (Miniconda)** — download the installer for your OS from [docs.conda.io/en/latest/miniconda.html](https://docs.conda.io/en/latest/miniconda.html) and run it. Accept the defaults; when it asks whether to initialise conda, say yes.
+
+Open a new terminal window after installing so the changes take effect.
+
+**Windows**
+
+Install [Git for Windows](https://git-scm.com/download/win) (includes Git Bash) and [Miniconda for Windows](https://docs.conda.io/en/latest/miniconda.html). Run the commands below inside **Git Bash**, not Command Prompt. `make` is not available by default — see [Windows](#windows).
+
+### 2. Download and set up the environments
 
 ```bash
-git clone <this repo>
+git clone https://github.com/michelletytong/pnn_multiplex.git
 cd pnn_multiplex
 conda env create -f environment/analysis.yml
 conda activate pnn-analysis
 ```
 
-That's enough to run most of the pipeline. **The two detectors need their own
-environments**, because their dependencies conflict with each other:
+That's enough to run most of the pipeline. **The two detectors need their own environments**, because their dependencies conflict with each other:
 
 ```bash
 conda env create -f environment/seg.yml     # Cellpose: nuclei and DARPP-32
@@ -95,6 +108,16 @@ Full detail, including which repo tag matches which weights, is in
 conda activate pnn-analysis
 make check
 ```
+
+---
+
+## Sample data
+
+I included 4 images (one mouse, one slice, 4 channels) of the nucleus accumbens for you to try out the pipeline. You may need to pre-process the images (adjust brightness, background, etc) for optimal detection, but it'll give you a good sense for what each of the auto-detection tools can handle.
+
+**[Download sample_data.zip](https://github.com/michelletytong/pnn_multiplex/releases/download/v1.0-sample-data/sample_data.zip)** (~4 MB)
+
+Unzip it and drop the four TIFFs into `data/`, then follow the [Running it](#running-it) steps from step 0. The images are downsampled 50% from the originals.
 
 ---
 
