@@ -14,19 +14,17 @@ MIT licensed — use it however you like.
 
 ---
 
-## The one idea you need
+## The main logic of this pipeline
 
-Everything is anchored on **DAPI nuclei**. The pipeline finds every nucleus, and that
-becomes the list of cells. Then for each marker it either:
+Everything is anchored on **DAPI nuclei**. The pipeline finds every nucleus (DAPI), and that
+becomes the list of cells. Then for each marker, it either:
 
-- **measures** how bright that marker is around the cell, or
-- **detects** objects (a perineuronal net, a DARPP-32⁺ soma) and **matches** each to
+- **measures** how bright that marker is around or within the cell (e.g. for ERa, where puncta can be found in the nucleus, cytoplasm, or membrane), or
+- **detects** objects (a perineuronal net or a DARPP-32⁺ soma) and **matches** each to
   a cell — or both.
 
-So "does this cell have a PNN?" is answered by *finding a net and matching it to a
-nucleus*, not by asking whether the WFA channel is bright there. That matters: WFA
-stains diffusely across the tissue, so brightness alone would call half the field
-positive.
+So "does this cell have a PNN?" is answered by *finding a PNN and matching it to a
+nucleus*, not solely by asking whether the WFA channel is bright where there is a cell.
 
 ---
 
@@ -46,18 +44,9 @@ pipeline logic works on your machine.
 
 ### 1. Get the prerequisites
 
-You need **git** and **conda** (Miniconda is enough). If you already have both, skip ahead.
+You need **conda** (Miniconda is enough). Download the installer for your OS from [docs.conda.io/en/latest/miniconda.html](https://docs.conda.io/en/latest/miniconda.html) and run it. Accept the defaults; when it asks whether to initialise conda, say yes. Open a new terminal window after installing so the changes take effect.
 
-**macOS / Linux**
-
-- **git** — macOS: `xcode-select --install` in Terminal. Linux: `sudo apt install git` (Debian/Ubuntu) or `sudo dnf install git` (Fedora/RHEL).
-- **conda (Miniconda)** — download the installer for your OS from [docs.conda.io/en/latest/miniconda.html](https://docs.conda.io/en/latest/miniconda.html) and run it. Accept the defaults; when it asks whether to initialise conda, say yes.
-
-Open a new terminal window after installing so the changes take effect.
-
-**Windows**
-
-Install [Git for Windows](https://git-scm.com/download/win) (includes Git Bash) and [Miniconda for Windows](https://docs.conda.io/en/latest/miniconda.html). Run the commands below inside **Git Bash**, not Command Prompt. `make` is not available by default — see [Windows](#windows).
+On **Windows**, also see [Windows](#windows) below — `make` isn't available by default.
 
 ### 2. Download and set up the environments
 
@@ -86,7 +75,7 @@ needs it.
 
 ### One extra step for PNNs
 
-The PNN detector is someone else's code and model, so you fetch them separately:
+The PNN detector is someone else's code and model, so fetch them separately:
 
 ```bash
 # 1. their repository, next to this one (the default config expects it there)
@@ -113,7 +102,7 @@ make check
 
 ## Sample data
 
-I included 4 images (one mouse, one slice, 4 channels) of the nucleus accumbens for you to try out the pipeline. You may need to pre-process the images (adjust brightness, background, etc) for optimal detection, but it'll give you a good sense for what each of the auto-detection tools can handle.
+I included 4 images (one mouse, one slice, 4 channels) of the nucleus accumbens for you to try out the pipeline. The filenames are already what you need to run the pipeline (see ## Setting up your own images below), but you may still need to pre-process the images (adjust brightness, background, etc) for optimal detection, but it'll give you a good sense for what each of the auto-detection tools can handle.
 
 **[Download sample_data.zip](https://github.com/michelletytong/pnn_multiplex/releases/download/v1.0-sample-data/sample_data.zip)** (~4 MB)
 
