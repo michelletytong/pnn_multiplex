@@ -1,12 +1,9 @@
 # pnn_multiplex
 
-Counts cells in multiplexed fluorescence images and tells you, **for every single
-cell**, which markers it has and where in the brain it sits.
-
-**You get one spreadsheet per mouse. One row per cell. A column for each marker.**
+This pipeline was developed for use with IHC images with 4 channels, where one channel is WFA. Our images are from a Zeiss LSM800 confocal microscope, but the pipeline and detection tools should be agnostic to what microscope was used. 
 
 It leans on two excellent tools that other people wrote — Cellpose for cell counting
-or soma/nuclear labels, and the Ciampi/Lupori PNN detector for perineuronal nets.
+or soma/nuclear/membrane labels, and the Ciampi/Lupori PNN detector for perineuronal nets (WFA) and overall WFA intensity.
 **Please cite them** if you publish anything using this; links and papers are under
 [Tools that we relied on](#tools-that-we-relied-on).
 
@@ -16,15 +13,17 @@ MIT licensed — use it however you like.
 
 ## The main logic of this pipeline
 
-Everything is anchored on **DAPI nuclei**. The pipeline finds every nucleus (DAPI), and that
-becomes the list of cells. Then for each marker, it either:
+Everything is anchored on **DAPI nuclei**. The pipeline first finds every nucleus (DAPI) using Cellpose, and that
+becomes the list of cells. It includes a GUI where you can manually inspect the DAPI detection and add/remove cells as needed. This step is critical since everything else is anchored on DAPI. 
 
+Then, for each non-WFA marker, it either:
 - **measures** how bright that marker is around or within the cell (e.g. for ERa, where puncta can be found in the nucleus, cytoplasm, or membrane), or
-- **detects** objects (a perineuronal net or a DARPP-32⁺ soma) and **matches** each to
-  a cell — or both.
+- **detects** objects (e.g. DARPP-32⁺ soma) and **matches** each to a cell.
 
-So "does this cell have a PNN?" is answered by *finding a PNN and matching it to a
-nucleus*, not solely by asking whether the WFA channel is bright where there is a cell.
+For WFA, it uses Lupori et al's ML tool to detect PNNs, but only counts them when it matches it to a
+nucleus, not solely by asking whether the WFA channel is bright where there is a cell.
+
+Next, the user can manually draw ROIs (e.g. NAc shell and core) and the pipeline will generate the area of the ROI as well as record which ROI each cell can be found in. It creates a master csv for each mouseID with each row being one cell, its PNN status (and PNN intensity), ERa intensity, DARPP-32 status, which ROI, and various other relevant measures.
 
 ---
 
