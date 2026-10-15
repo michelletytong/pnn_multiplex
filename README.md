@@ -434,6 +434,45 @@ Nothing needs starting over. Each step redoes only its own work:
 - New mouse → put the files in `data/` and run from step 0; finished images are
   skipped.
 
+### Going back to inspect or fix individual images
+
+Already finished the pipeline and want to add or remove markers on a particular
+image? Re-open it in the same window. Your earlier edits are loaded back in, so you
+keep what you did and only change what you want.
+
+`make curate` and `make curate-nuclei` only open images you haven't curated yet, so
+once you've finished they will say there is nothing to do. To revisit specific images,
+run the script directly and name the image (the filename without the channel number,
+e.g. `M1_NAc_1`):
+
+```bash
+conda activate pnn-analysis
+
+# Nuclei (DAPI) — add or remove cells
+python src/s03_curate_nuclei.py M1_NAc_1
+
+# Markers (PNN, DARPP-32, …) — add or remove objects
+python src/s05_curate_detections.py M1_NAc_1
+```
+
+- Name several images separated by spaces, or use `--all` to step through everything.
+- Edit as before ([Working in the windows](#working-in-the-windows)), then **close the
+  window to save**.
+- Changed your mind and want the detector's original output back for an image?
+  Add `--reset`, e.g. `python src/s05_curate_detections.py --reset M1_NAc_1`, then
+  curate it again.
+
+**Then regenerate the spreadsheet.** Curation edits don't flow into `results/` by
+themselves:
+
+```bash
+make master      # rebuild the per-mouse CSV with your new edits
+make assign      # re-assign cells to regions (only if you've already drawn ROIs)
+```
+
+If you added or removed **nuclei**, markers are re-matched to cells when you run
+`make master`, so there is no need to re-run the detectors.
+
 ---
 
 ## Tests
